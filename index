@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>키캡 누르기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-1: #2b241f;
+    --wood-2: #1c1712;
+    --cap-top-a: #fbf6ea;
+    --cap-top-b: #d9cba3;
+    --cap-front-a: #ded0aa;
+    --cap-front-b: #a8976d;
+    --cap-plate: #14110e;
+    --ink: #f2ead9;
+    --ink-dim: #b8ab8e;
+    --accent: #c97b3d;
+    --shadow-color: rgba(0,0,0,0.6);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0; height:100%;
+    background: radial-gradient(circle at 50% 18%, var(--wood-1), var(--wood-2) 75%);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before{
+    content:"";
+    position: fixed; inset:0;
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.015) 0px,
+      rgba(255,255,255,0.015) 1px,
+      transparent 1px,
+      transparent 90px
+    );
+    pointer-events: none;
+  }
+
+  .wrap{
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 48px 20px 80px;
+    position: relative;
+  }
+
+  h1{
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: clamp(28px, 6vw, 44px);
+    margin: 0 0 48px;
+    text-align: center;
+    letter-spacing: -0.01em;
+  }
+
+  .mute-btn{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background 0.2s, transform 0.15s;
+    z-index: 10;
+  }
+  .mute-btn:hover{ background: rgba(255,255,255,0.09); }
+  .mute-btn:active{ transform: scale(0.92); }
+
+  /* ---------- stage ---------- */
+  .stage{
+    perspective: 1000px;
+    width: 220px;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  .keycap-group{
+    position: relative;
+    width: 168px;
+    height: 168px;
+    transform-style: preserve-3d;
+    transform: rotateX(24deg);
+    cursor: pointer;
+  }
+
+  .kc-shadow{
+    position: absolute;
+    left: 50%;
+    bottom: -34px;
+    width: 150px;
+    height: 34px;
+    transform: translateX(-50%) translateZ(-40px);
+    background: radial-gradient(ellipse at center, var(--shadow-color) 0%, transparent 72%);
+    border-radius: 50%;
+    transition: transform 0.09s cubic-bezier(.3,0,.6,1), opacity 0.09s;
+    opacity: 0.9;
+  }
+
+  .kc-plate{
+    position: absolute;
+    left: 50%;
+    bottom: -18px;
+    width: 96px; height: 20px;
+    background: linear-gradient(180deg, #24201a, var(--cap-plate));
+    border-radius: 3px;
+    transform: translateX(-50%) translateZ(-2px);
+  }
+
+  /* tapered skirt - the wall you see below the raised top */
+  .kc-skirt{
+    position: absolute;
+    inset: 10px 0 0 0;
+    height: 150px;
+    border-radius: 22px;
+    clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+    background: linear-gradient(165deg, var(--cap-front-a), var(--cap-front-b) 85%);
+    box-shadow:
+      inset 0 -14px 20px rgba(0,0,0,0.35),
+      inset 0 8px 10px rgba(255,255,255,0.15);
+    transform: translateZ(0px);
+  }
+
+  /* raised, dished top - pushed toward the viewer so it reads clearly as the top surface */
+  .kc-top{
+    position: absolute;
+    left: 8px; right: 8px; top: 0;
+    height: 148px;
+    border-radius: 20px;
+    background:
+      radial-gradient(120% 90% at 30% 20%, rgba(255,255,255,0.6), transparent 55%),
+      radial-gradient(120% 100% at 50% 118%, rgba(0,0,0,0.16), transparent 60%),
+      linear-gradient(160deg, var(--cap-top-a), var(--cap-top-b) 88%);
+    background-size: cover;
+    background-position: center;
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.35),
+      inset 0 6px 10px rgba(255,255,255,0.6),
+      inset 0 -10px 16px rgba(0,0,0,0.12),
+      0 1px 0 rgba(255,255,255,0.4);
+    transform: translateZ(26px);
+    transition: transform 0.09s cubic-bezier(.3,0,.6,1);
+    overflow: hidden;
+  }
+  .kc-top::after{
+    content:"";
+    position: absolute; inset:0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>");
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* pressed state */
+  .keycap-group.pressed .kc-top{
+    transform: translateZ(7px);
+  }
+  .keycap-group.pressed .kc-shadow{
+    transform: translateX(-50%) translateZ(-40px) scale(0.72);
+    opacity: 0.55;
+  }
+  .keycap-group.pressed{
+    transform: rotateX(24deg) translateY(4px);
+  }
+
+  /* ---------- effect plane: matches the keycap top face orientation ---------- */
+  .fx-plane{
+    position: absolute;
+    left: 8px; right: 8px; top: 0;
+    height: 148px;
+    border-radius: 20px;
+    overflow: visible;
+    pointer-events: none;
+    transform: translateZ(27px);
+    z-index: 6;
+  }
+
+  /* ---------- readout ---------- */
+  .readout{
+    margin-top: 54px;
+    text-align: center;
+  }
+
+  .count{
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    color: var(--ink-dim);
+  }
+  .count strong{
+    color: var(--accent);
+    font-size: 20px;
+  }
+
+  .echo{
+    margin-top: 14px;
+    min-height: 26px;
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .echo.show{ opacity: 1; }
+
+  /* ---------- controls ---------- */
+  .controls{
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-top: 44px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .swatches{
+    display: flex;
+    gap: 12px;
+  }
+  .swatch{
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+    padding: 0;
+  }
+  .swatch:hover{ transform: scale(1.12); }
+  .swatch.active{ border-color: var(--accent); }
+  .swatch[data-cw="cream"]{ background: linear-gradient(160deg,#fbf6ea,#c9b98c); }
+  .swatch[data-cw="mint"]{ background: linear-gradient(160deg,#eaf7ee,#8fbf9e); }
+  .swatch[data-cw="coral"]{ background: linear-gradient(160deg,#ffe4d6,#e08a63); }
+
+  .divider{
+    width: 1px; height: 22px;
+    background: rgba(255,255,255,0.14);
+  }
+
+  .upload-btn, .reset-btn{
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.14);
+    padding: 9px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.12s;
+  }
+  .upload-btn:hover, .reset-btn:hover{ background: rgba(255,255,255,0.1); }
+  .upload-btn:active, .reset-btn:active{ transform: scale(0.96); }
+  .reset-btn{ display: none; color: var(--ink-dim); }
+  .reset-btn.show{ display: inline-block; }
+
+  .effect-select{
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.14);
+    padding: 8px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    outline: none;
+  }
+  .effect-select option{ background: #23201b; color: var(--ink); }
+
+  .hint{
+    margin-top: 36px;
+    font-size: 12px;
+    color: rgba(184,171,142,0.55);
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- press effects (shaped to the keycap's rounded square) ---------- */
+  .fx-ripple{
+    position: absolute;
+    inset: 0;
+    border: 3px solid var(--accent);
+    border-radius: 20px;
+    opacity: 0.75;
+    animation: rippleAnim 0.55s ease-out forwards;
+  }
+  @keyframes rippleAnim{
+    from{ transform: scale(1); opacity: 0.75; }
+    to{ transform: scale(2.3); opacity: 0; }
+  }
+
+  .fx-spark{
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 7px; height: 7px;
+    border-radius: 3px;
+    background: var(--accent);
+    box-shadow: 0 0 6px 1px var(--accent);
+    animation: sparkAnim 0.5s ease-out forwards;
+  }
+  @keyframes sparkAnim{
+    from{ transform: translate(-50%,-50%) translate(var(--ox), var(--oy)) scale(1); opacity: 1; }
+    to{ transform: translate(-50%,-50%) translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+  }
+
+  .fx-confetti{
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 8px; height: 8px;
+    background: var(--cc, var(--accent));
+    animation: confettiAnim 0.7s cubic-bezier(.2,.6,.4,1) forwards;
+  }
+  @keyframes confettiAnim{
+    from{ transform: translate(-50%,-50%) translate(var(--ox), var(--oy)) rotate(0deg); opacity: 1; }
+    to{ transform: translate(-50%,-50%) translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .kc-top, .kc-shadow, .keycap-group{ transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mute-btn" id="muteBtn" aria-label="소리 끄기/켜기">🔊</button>
+
+<div class="wrap">
+  <h1>눌러보세요</h1>
+
+  <div class="stage" id="stage">
+    <div class="keycap-group" id="keycap" tabindex="0" role="button" aria-label="키캡 누르기">
+      <div class="kc-shadow"></div>
+      <div class="kc-plate"></div>
+      <div class="kc-skirt"></div>
+      <div class="kc-top" id="kcTop"></div>
+      <div class="fx-plane" id="fxPlane"></div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="count">누른 횟수 <strong id="countNum">0</strong>번</div>
+    <div class="echo" id="echo"></div>
+  </div>
+
+  <div class="controls">
+    <div class="swatches" id="swatches">
+      <button class="swatch active" data-cw="cream" aria-label="크림색"></button>
+      <button class="swatch" data-cw="mint" aria-label="민트색"></button>
+      <button class="swatch" data-cw="coral" aria-label="코랄색"></button>
+    </div>
+    <div class="divider"></div>
+    <button class="upload-btn" id="uploadBtn">내 이미지로 만들기</button>
+    <button class="reset-btn" id="resetBtn">기본으로 되돌리기</button>
+    <input type="file" id="fileInput" accept="image/*" style="display:none">
+    <div class="divider"></div>
+    <select class="effect-select" id="effectSelect">
+      <option value="spark">이펙트: 반짝임</option>
+      <option value="ripple">이펙트: 파동</option>
+      <option value="confetti">이펙트: 색종이</option>
+      <option value="none">이펙트: 없음</option>
+    </select>
+  </div>
+
+  <div class="hint">스페이스바로도 누를 수 있어요</div>
+</div>
+
+<script>
+(function(){
+  const keycap = document.getElementById('keycap');
+  const kcTop = document.getElementById('kcTop');
+  const countNum = document.getElementById('countNum');
+  const echo = document.getElementById('echo');
+  const muteBtn = document.getElementById('muteBtn');
+  const swatches = document.querySelectorAll('.swatch');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const fileInput = document.getElementById('fileInput');
+  const swatchesWrap = document.getElementById('swatches');
+  const effectSelect = document.getElementById('effectSelect');
+  const fxPlane = document.getElementById('fxPlane');
+
+  let count = 0;
+  let muted = false;
+  let audioCtx = null;
+  let clickTimes = [];
+  let echoTimer = null;
+
+  // real keyboard keystroke sound: layered like an actual mechanical switch recording -
+  // a fast broadband snap, a plasticky two-formant resonance, a touch of ring, and
+  // (mostly on the down-stroke) a soft bottom-out thump.
+  const colorways = {
+    cream: {
+      top: ['#fbf6ea', '#d9cba3'], front: ['#ded0aa', '#a8976d'],
+      sound: { f1: 2400, f2: 4200, ring: 1500, thump: 380, thumpAmt: 0.55, decay: 0.032 }
+    },
+    mint: {
+      top: ['#eefaf1', '#b9dcc3'], front: ['#cdeada', '#7fac8f'],
+      sound: { f1: 1500, f2: 2800, ring: 900, thump: 260, thumpAmt: 0.85, decay: 0.05 }
+    },
+    coral: {
+      top: ['#fff0e6', '#e8b696'], front: ['#f0c6a4', '#c17d52'],
+      sound: { f1: 3200, f2: 5200, ring: 2000, thump: 460, thumpAmt: 0.3, decay: 0.022 }
+    }
+  };
+
+  let currentSound = colorways.cream.sound;
+
+  function applyColorway(name){
+    const cw = colorways[name];
+    const r = document.documentElement.style;
+    r.setProperty('--cap-top-a', cw.top[0]);
+    r.setProperty('--cap-top-b', cw.top[1]);
+    r.setProperty('--cap-front-a', cw.front[0]);
+    r.setProperty('--cap-front-b', cw.front[1]);
+    currentSound = cw.sound;
+  }
+
+  swatches.forEach(sw => {
+    sw.addEventListener('click', () => {
+      swatches.forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      applyColorway(sw.dataset.cw);
+    });
+  });
+
+  uploadBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      kcTop.style.backgroundImage =
+        `radial-gradient(120% 90% at 30% 20%, rgba(255,255,255,0.22), transparent 55%), url(${ev.target.result}), linear-gradient(#ffffff, #ffffff)`;
+      kcTop.style.backgroundSize = 'cover, cover, cover';
+      kcTop.style.backgroundPosition = 'center, center, center';
+      resetBtn.classList.add('show');
+      swatchesWrap.style.opacity = '0.35';
+      swatchesWrap.style.pointerEvents = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  resetBtn.addEventListener('click', () => {
+    kcTop.style.backgroundImage = '';
+    kcTop.style.backgroundSize = '';
+    kcTop.style.backgroundPosition = '';
+    resetBtn.classList.remove('show');
+    swatchesWrap.style.opacity = '1';
+    swatchesWrap.style.pointerEvents = 'auto';
+    fileInput.value = '';
+  });
+
+  function getCtx(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if(audioCtx.state === 'suspended'){
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  function noiseBuffer(ctx, seconds, curve){
+    const size = Math.max(1, Math.floor(ctx.sampleRate * seconds));
+    const buffer = ctx.createBuffer(1, size, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<size;i++){
+      data[i] = (Math.random()*2-1) * Math.pow(1 - i/size, curve);
+    }
+    return buffer;
+  }
+
+  // real mechanical-keyboard-style keystroke: a crisp broadband snap layered
+  // with two plasticky resonance bands, a short ring, and a bottom-out thump.
+  function playClack(phase){
+    if(muted) return;
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const p = currentSound;
+    const isDown = phase === 'down';
+    const master = isDown ? 1 : 0.62;
+
+    // 1) snap: very short, high-passed noise transient
+    const snap = ctx.createBufferSource();
+    snap.buffer = noiseBuffer(ctx, 0.01, 1.2);
+    const snapFilter = ctx.createBiquadFilter();
+    snapFilter.type = 'highpass';
+    snapFilter.frequency.value = 4500;
+    const snapGain = ctx.createGain();
+    snapGain.gain.setValueAtTime(0.4 * master, now);
+    snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.009);
+    snap.connect(snapFilter).connect(snapGain).connect(ctx.destination);
+
+    // 2) plasticky body: noise through two parallel bandpass resonances
+    const body = ctx.createBufferSource();
+    body.buffer = noiseBuffer(ctx, p.decay + 0.01, 1.7);
+    const bp1 = ctx.createBiquadFilter();
+    bp1.type = 'bandpass'; bp1.frequency.value = p.f1; bp1.Q.value = 3.2;
+    const bp2 = ctx.createBiquadFilter();
+    bp2.type = 'bandpass'; bp2.frequency.value = p.f2; bp2.Q.value = 3.2;
+    const bodyGain1 = ctx.createGain();
+    bodyGain1.gain.setValueAtTime(0.42 * master, now);
+    bodyGain1.gain.exponentialRampToValueAtTime(0.001, now + p.decay);
+    const bodyGain2 = ctx.createGain();
+    bodyGain2.gain.setValueAtTime(0.28 * master, now);
+    bodyGain2.gain.exponentialRampToValueAtTime(0.001, now + p.decay * 0.8);
+    body.connect(bp1).connect(bodyGain1).connect(ctx.destination);
+    body.connect(bp2).connect(bodyGain2).connect(ctx.destination);
+
+    // 3) short ring - a quick sine ping for the plastic "tink"
+    const ring = ctx.createOscillator();
+    ring.type = 'sine';
+    ring.frequency.setValueAtTime(p.ring, now);
+    ring.frequency.exponentialRampToValueAtTime(p.ring * 0.7, now + 0.02);
+    const ringGain = ctx.createGain();
+    ringGain.gain.setValueAtTime(0.1 * master, now);
+    ringGain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+    ring.connect(ringGain).connect(ctx.destination);
+
+    // 4) bottom-out thump - mostly on the down-stroke
+    const thump = ctx.createOscillator();
+    thump.type = 'sine';
+    thump.frequency.setValueAtTime(p.thump, now);
+    thump.frequency.exponentialRampToValueAtTime(p.thump * 0.55, now + 0.045);
+    const thumpGain = ctx.createGain();
+    const thumpLevel = 0.22 * p.thumpAmt * (isDown ? 1 : 0.25);
+    thumpGain.gain.setValueAtTime(0.0001, now);
+    thumpGain.gain.linearRampToValueAtTime(thumpLevel, now + 0.004);
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    thump.connect(thumpGain).connect(ctx.destination);
+
+    const stopAt = now + p.decay + 0.06;
+    snap.start(now); snap.stop(now + 0.012);
+    body.start(now); body.stop(stopAt);
+    ring.start(now); ring.stop(now + 0.025);
+    thump.start(now); thump.stop(now + 0.06);
+  }
+
+  function showEcho(){
+    clearTimeout(echoTimer);
+    const now = Date.now();
+    clickTimes.push(now);
+    clickTimes = clickTimes.filter(t => now - t < 1200);
+    const n = Math.min(clickTimes.length, 4);
+    echo.textContent = '또각'.repeat(n) + (n >= 4 ? '...' : '');
+    echo.classList.add('show');
+    echoTimer = setTimeout(() => echo.classList.remove('show'), 900);
+  }
+
+  const confettiColors = ['#c97b3d', '#e8b696', '#8fbf9e', '#f2ead9', '#a6613c'];
+
+  function perimeterPoint(t, w, h){
+    const hw = w / 2, hh = h / 2;
+    const side = Math.floor(t * 4) % 4;
+    const local = (t * 4) % 1;
+    if(side === 0) return { x: -hw + local*w, y: -hh };
+    if(side === 1) return { x: hw, y: -hh + local*h };
+    if(side === 2) return { x: hw - local*w, y: hh };
+    return { x: -hw, y: hh - local*h };
+  }
+
+  function spawnRipple(){
+    const el = document.createElement('div');
+    el.className = 'fx-ripple';
+    fxPlane.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+
+  function spawnSpark(){
+    const n = 12;
+    for(let i=0;i<n;i++){
+      const el = document.createElement('div');
+      el.className = 'fx-spark';
+      const t = i / n + (Math.random()*0.05);
+      const origin = perimeterPoint(t, 152, 148);
+      const dist = 26 + Math.random()*22;
+      const angle = Math.atan2(origin.y, origin.x);
+      el.style.setProperty('--ox', origin.x + 'px');
+      el.style.setProperty('--oy', origin.y + 'px');
+      el.style.setProperty('--dx', (origin.x + Math.cos(angle)*dist) + 'px');
+      el.style.setProperty('--dy', (origin.y + Math.sin(angle)*dist) + 'px');
+      fxPlane.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+  }
+
+  function spawnConfetti(){
+    const n = 14;
+    for(let i=0;i<n;i++){
+      const el = document.createElement('div');
+      el.className = 'fx-confetti';
+      const t = i / n + (Math.random()*0.05);
+      const origin = perimeterPoint(t, 152, 148);
+      const dist = 34 + Math.random()*34;
+      const angle = Math.atan2(origin.y, origin.x);
+      el.style.setProperty('--ox', origin.x + 'px');
+      el.style.setProperty('--oy', origin.y + 'px');
+      el.style.setProperty('--dx', (origin.x + Math.cos(angle)*dist) + 'px');
+      el.style.setProperty('--dy', (origin.y + Math.sin(angle)*dist) + 'px');
+      el.style.setProperty('--rot', (Math.random()*720-360) + 'deg');
+      el.style.setProperty('--cc', confettiColors[i % confettiColors.length]);
+      fxPlane.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+  }
+
+  function triggerEffect(){
+    const type = effectSelect.value;
+    if(type === 'ripple') spawnRipple();
+    else if(type === 'spark') spawnSpark();
+    else if(type === 'confetti') spawnConfetti();
+  }
+
+  function press(){
+    if(keycap.classList.contains('pressed')) return;
+    keycap.classList.add('pressed');
+    playClack('down');
+    triggerEffect();
+  }
+
+  function release(){
+    if(!keycap.classList.contains('pressed')) return;
+    keycap.classList.remove('pressed');
+    playClack('up');
+    count++;
+    countNum.textContent = count.toLocaleString('ko-KR');
+    showEcho();
+  }
+
+  keycap.addEventListener('mousedown', press);
+  keycap.addEventListener('mouseup', release);
+  keycap.addEventListener('mouseleave', () => {
+    if(keycap.classList.contains('pressed')) keycap.classList.remove('pressed');
+  });
+  keycap.addEventListener('touchstart', (e) => { e.preventDefault(); press(); }, { passive:false });
+  keycap.addEventListener('touchend', (e) => { e.preventDefault(); release(); }, { passive:false });
+
+  keycap.addEventListener('keydown', (e) => {
+    if(e.code === 'Enter' || e.code === 'Space'){
+      e.preventDefault();
+      press();
+    }
+  });
+  keycap.addEventListener('keyup', (e) => {
+    if(e.code === 'Enter' || e.code === 'Space'){
+      e.preventDefault();
+      release();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if(e.code === 'Space' && document.activeElement !== keycap){
+      e.preventDefault();
+      press();
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    if(e.code === 'Space' && document.activeElement !== keycap){
+      e.preventDefault();
+      release();
+    }
+  });
+
+  muteBtn.addEventListener('click', () => {
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+  });
+})();
+</script>
+
+</body>
+</html>
