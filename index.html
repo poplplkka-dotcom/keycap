@@ -52,7 +52,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 48px 20px 80px;
+    padding: 48px 20px 40px;
     position: relative;
   }
 
@@ -170,6 +170,17 @@
     mix-blend-mode: overlay;
     pointer-events: none;
     border-radius: inherit;
+  }
+
+  .kc-top.cat-mode::before{
+    content: "🐾";
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 44px;
+    filter: drop-shadow(0 1px 0 rgba(255,255,255,0.5));
+    opacity: 0.85;
+    z-index: 1;
   }
 
   /* pressed state */
@@ -335,6 +346,115 @@
     to{ transform: translate(-50%,-50%) translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; }
   }
 
+  .fx-emoji{
+    position: absolute;
+    left: 50%; top: 50%;
+    line-height: 1;
+    animation: emojiAnim 0.65s ease-out forwards;
+  }
+  @keyframes emojiAnim{
+    from{ transform: translate(-50%,-50%) translate(var(--ox), var(--oy)) scale(0.5) rotate(0deg); opacity: 1; }
+    to{ transform: translate(-50%,-50%) translate(var(--dx), var(--dy)) scale(1.15) rotate(var(--rot)); opacity: 0; }
+  }
+
+  .fx-puff{
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 0; height: 0;
+  }
+  .fx-puff-flash{
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 200px; height: 200px;
+    margin: -100px 0 0 -100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.85), rgba(255,255,255,0) 65%);
+    mix-blend-mode: screen;
+    animation: puffFlashAnim 0.26s ease-out forwards;
+  }
+  @keyframes puffFlashAnim{
+    from{ transform: scale(0.25); opacity: 1; }
+    to{ transform: scale(1.15); opacity: 0; }
+  }
+  .fx-puff-ring{
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 56px; height: 56px;
+    margin: -28px 0 0 -28px;
+    border-radius: 50%;
+    border: 5px solid var(--accent);
+    animation: puffRingAnim 0.45s cubic-bezier(.15,.8,.3,1) forwards;
+  }
+  .fx-puff-ring.ring2{
+    border-width: 3px;
+    border-color: #fff;
+    animation-name: puffRingAnim2;
+    animation-duration: 0.55s;
+    animation-delay: 0.05s;
+  }
+  @keyframes puffRingAnim{
+    from{ transform: scale(0.4); opacity: 0.9; }
+    to{ transform: scale(3); opacity: 0; }
+  }
+  @keyframes puffRingAnim2{
+    from{ transform: scale(0.3); opacity: 0.7; }
+    to{ transform: scale(3.8); opacity: 0; }
+  }
+  .fx-puff-line{
+    position: absolute;
+    left: 0; top: 0;
+    width: 5px; height: 7px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #fff, var(--accent));
+    box-shadow: 0 0 9px 1px var(--accent);
+    transform-origin: center;
+    animation: puffLineAnim 0.42s cubic-bezier(.15,.8,.3,1) forwards;
+  }
+  .fx-puff-line.alt{
+    background: linear-gradient(180deg, var(--accent), #fff);
+    box-shadow: 0 0 9px 1px #fff;
+  }
+  @keyframes puffLineAnim{
+    from{ transform: translate(-50%,-50%) rotate(var(--ang)) translateY(-8px) scaleY(1); opacity: 1; }
+    to{ transform: translate(-50%,-50%) rotate(var(--ang)) translateY(-76px) scaleY(var(--len, 9)); opacity: 0; }
+  }
+  .fx-puff-core{
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 34px; height: 34px;
+    margin: -17px 0 0 -17px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.55), var(--accent) 55%, transparent 75%);
+    mix-blend-mode: screen;
+    animation: puffCoreAnim 0.22s ease-out forwards;
+  }
+  @keyframes puffCoreAnim{
+    from{ transform: scale(0.2); opacity: 0.8; }
+    to{ transform: scale(2.3); opacity: 0; }
+  }
+  .fx-puff-sparkle{
+    position: absolute;
+    left: 50%; top: 50%;
+    font-size: 14px;
+    line-height: 1;
+    animation: puffSparkleAnim 0.5s ease-out forwards;
+  }
+  @keyframes puffSparkleAnim{
+    from{ transform: translate(-50%,-50%) translate(0,0) scale(0.6) rotate(0deg); opacity: 1; }
+    to{ transform: translate(-50%,-50%) translate(var(--dx), var(--dy)) scale(1.1) rotate(var(--rot)); opacity: 0; }
+  }
+
+  .stage.shake{ animation: stageShake 0.32s ease; }
+  @keyframes stageShake{
+    0%{ transform: translate(0,0); }
+    15%{ transform: translate(-5px,3px); }
+    30%{ transform: translate(5px,-3px); }
+    45%{ transform: translate(-4px,3px); }
+    60%{ transform: translate(3px,-2px); }
+    75%{ transform: translate(-2px,1px); }
+    100%{ transform: translate(0,0); }
+  }
+
   @media (prefers-reduced-motion: reduce){
     .kc-top, .kc-shadow, .keycap-group{ transition: none !important; }
   }
@@ -377,7 +497,14 @@
       <option value="spark">이펙트: 반짝임</option>
       <option value="ripple">이펙트: 파동</option>
       <option value="confetti">이펙트: 색종이</option>
+      <option value="heart">이펙트: 하트</option>
+      <option value="star">이펙트: 별가루</option>
+      <option value="puff">이펙트: 임팩트</option>
       <option value="none">이펙트: 없음</option>
+    </select>
+    <select class="effect-select" id="soundModeSelect">
+      <option value="keyboard">사운드: 키보드 타건음</option>
+      <option value="cat">사운드: 고양이 야옹</option>
     </select>
   </div>
 
@@ -386,6 +513,7 @@
 
 <script>
 (function(){
+  const stage = document.getElementById('stage');
   const keycap = document.getElementById('keycap');
   const kcTop = document.getElementById('kcTop');
   const countNum = document.getElementById('countNum');
@@ -397,6 +525,7 @@
   const fileInput = document.getElementById('fileInput');
   const swatchesWrap = document.getElementById('swatches');
   const effectSelect = document.getElementById('effectSelect');
+  const soundModeSelect = document.getElementById('soundModeSelect');
   const fxPlane = document.getElementById('fxPlane');
 
   let count = 0;
@@ -443,6 +572,12 @@
     });
   });
 
+  soundModeSelect.addEventListener('change', () => {
+    const isCat = soundModeSelect.value === 'cat';
+    const hasCustomImage = !!kcTop.style.backgroundImage;
+    kcTop.classList.toggle('cat-mode', isCat && !hasCustomImage);
+  });
+
   uploadBtn.addEventListener('click', () => fileInput.click());
 
   fileInput.addEventListener('change', (e) => {
@@ -454,9 +589,8 @@
         `radial-gradient(120% 90% at 30% 20%, rgba(255,255,255,0.22), transparent 55%), url(${ev.target.result}), linear-gradient(#ffffff, #ffffff)`;
       kcTop.style.backgroundSize = 'cover, cover, cover';
       kcTop.style.backgroundPosition = 'center, center, center';
+      kcTop.classList.remove('cat-mode');
       resetBtn.classList.add('show');
-      swatchesWrap.style.opacity = '0.35';
-      swatchesWrap.style.pointerEvents = 'none';
     };
     reader.readAsDataURL(file);
   });
@@ -465,9 +599,8 @@
     kcTop.style.backgroundImage = '';
     kcTop.style.backgroundSize = '';
     kcTop.style.backgroundPosition = '';
+    kcTop.classList.toggle('cat-mode', soundModeSelect.value === 'cat');
     resetBtn.classList.remove('show');
-    swatchesWrap.style.opacity = '1';
-    swatchesWrap.style.pointerEvents = 'auto';
     fileInput.value = '';
   });
 
@@ -491,9 +624,39 @@
     return buffer;
   }
 
+  // real Korean voice reading "야옹" out loud via the browser's speech
+  // synthesis, spoken as one whole word on press so it's always heard clearly.
+  let koreanVoice = null;
+  function pickKoreanVoice(){
+    if(!('speechSynthesis' in window)) return null;
+    const voices = window.speechSynthesis.getVoices();
+    koreanVoice = voices.find(v => v.lang === 'ko-KR') ||
+                  voices.find(v => v.lang && v.lang.startsWith('ko')) ||
+                  null;
+    return koreanVoice;
+  }
+  if('speechSynthesis' in window){
+    pickKoreanVoice();
+    window.speechSynthesis.onvoiceschanged = pickKoreanVoice;
+  }
+
+  function playMeow(){
+    if(muted) return;
+    if(!('speechSynthesis' in window)) return;
+    const utter = new SpeechSynthesisUtterance('야옹');
+    utter.lang = 'ko-KR';
+    if(koreanVoice) utter.voice = koreanVoice;
+    utter.rate = 1;
+    utter.pitch = 1.25;
+    utter.volume = 1;
+    // cancel anything still queued so fast clicks don't pile up and lag
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
+  }
+
   // real mechanical-keyboard-style keystroke: a crisp broadband snap layered
   // with two plasticky resonance bands, a short ring, and a bottom-out thump.
-  function playClack(phase){
+  function playKeyClack(phase){
     if(muted) return;
     const ctx = getCtx();
     const now = ctx.currentTime;
@@ -557,13 +720,22 @@
     thump.start(now); thump.stop(now + 0.06);
   }
 
+  function playClack(phase){
+    if(soundModeSelect.value === 'cat'){
+      if(phase === 'down') playMeow();
+    } else {
+      playKeyClack(phase);
+    }
+  }
+
   function showEcho(){
     clearTimeout(echoTimer);
     const now = Date.now();
     clickTimes.push(now);
     clickTimes = clickTimes.filter(t => now - t < 1200);
     const n = Math.min(clickTimes.length, 4);
-    echo.textContent = '또각'.repeat(n) + (n >= 4 ? '...' : '');
+    const syllable = soundModeSelect.value === 'cat' ? '야옹' : '또각';
+    echo.textContent = syllable.repeat(n) + (n >= 4 ? '...' : '');
     echo.classList.add('show');
     echoTimer = setTimeout(() => echo.classList.remove('show'), 900);
   }
@@ -625,11 +797,87 @@
     }
   }
 
+  function spawnEmojiBurst(emojis, n){
+    for(let i=0;i<n;i++){
+      const el = document.createElement('div');
+      el.className = 'fx-emoji';
+      el.textContent = emojis[i % emojis.length];
+      el.style.fontSize = (15 + Math.random()*11) + 'px';
+      const t = i / n + (Math.random()*0.05);
+      const origin = perimeterPoint(t, 152, 148);
+      const dist = 30 + Math.random()*30;
+      const angle = Math.atan2(origin.y, origin.x);
+      el.style.setProperty('--ox', origin.x + 'px');
+      el.style.setProperty('--oy', origin.y + 'px');
+      el.style.setProperty('--dx', (origin.x + Math.cos(angle)*dist) + 'px');
+      el.style.setProperty('--dy', (origin.y + Math.sin(angle)*dist - 18) + 'px');
+      el.style.setProperty('--rot', (Math.random()*70 - 35) + 'deg');
+      fxPlane.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+  }
+
+  function spawnPuff(){
+    const wrap = document.createElement('div');
+    wrap.className = 'fx-puff';
+
+    const flash = document.createElement('div');
+    flash.className = 'fx-puff-flash';
+    wrap.appendChild(flash);
+
+    const ring = document.createElement('div');
+    ring.className = 'fx-puff-ring';
+    wrap.appendChild(ring);
+
+    const ring2 = document.createElement('div');
+    ring2.className = 'fx-puff-ring ring2';
+    wrap.appendChild(ring2);
+
+    const core = document.createElement('div');
+    core.className = 'fx-puff-core';
+    wrap.appendChild(core);
+
+    const lines = 16;
+    for(let i=0;i<lines;i++){
+      const line = document.createElement('div');
+      line.className = 'fx-puff-line' + (i % 2 === 0 ? '' : ' alt');
+      line.style.setProperty('--ang', (i * (360 / lines) + Math.random()*6) + 'deg');
+      line.style.setProperty('--len', (i % 2 === 0 ? 12 : 8));
+      wrap.appendChild(line);
+    }
+
+    const sparkles = ['✨','⚡','✦'];
+    const sparkleCount = 8;
+    for(let i=0;i<sparkleCount;i++){
+      const s = document.createElement('div');
+      s.className = 'fx-puff-sparkle';
+      s.textContent = sparkles[i % sparkles.length];
+      const angle = (Math.PI * 2 * i) / sparkleCount + Math.random()*0.3;
+      const dist = 55 + Math.random()*35;
+      s.style.setProperty('--dx', (Math.cos(angle)*dist) + 'px');
+      s.style.setProperty('--dy', (Math.sin(angle)*dist) + 'px');
+      s.style.setProperty('--rot', (Math.random()*180-90) + 'deg');
+      wrap.appendChild(s);
+    }
+
+    fxPlane.appendChild(wrap);
+    setTimeout(() => wrap.remove(), 550);
+
+    stage.classList.remove('shake');
+    // eslint-disable-next-line no-unused-expressions
+    void stage.offsetWidth; // restart the animation even on rapid repeats
+    stage.classList.add('shake');
+    setTimeout(() => stage.classList.remove('shake'), 320);
+  }
+
   function triggerEffect(){
     const type = effectSelect.value;
     if(type === 'ripple') spawnRipple();
     else if(type === 'spark') spawnSpark();
     else if(type === 'confetti') spawnConfetti();
+    else if(type === 'heart') spawnEmojiBurst(['💗','💕','💛','💜'], 10);
+    else if(type === 'star') spawnEmojiBurst(['✨','⭐','🌟'], 10);
+    else if(type === 'puff') spawnPuff();
   }
 
   function press(){
